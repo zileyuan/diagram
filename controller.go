@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/Unknwon/macaron"
 	"github.com/axgle/mahonia"
+	"gopkg.in/macaron.v1"
 )
 
 type ContextResult struct {

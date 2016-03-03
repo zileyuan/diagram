@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Unknwon/macaron"
-	"github.com/macaron-contrib/cache"
-	"github.com/macaron-contrib/pongo2"
-	"github.com/macaron-contrib/session"
+	"github.com/go-macaron/cache"
+	"github.com/go-macaron/pongo2"
+	"github.com/go-macaron/session"
+	"gopkg.in/macaron.v1"
 )
 
 func newMacaron() *macaron.Macaron {

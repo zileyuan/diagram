@@ -5,11 +5,10 @@ import (
 	"os"
 
 	"github.com/Unknwon/goconfig"
-	"github.com/Unknwon/macaron"
-	"github.com/lunny/log"
-
 	"github.com/go-xorm/core"
 	_ "github.com/lunny/godbc"
+	"github.com/lunny/log"
+	"gopkg.in/macaron.v1"
 )
 
 const (
