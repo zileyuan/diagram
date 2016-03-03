@@ -1,31 +1,14 @@
-<!DOCTYPE html>
-<html ng-app="ionicApp">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+{% extends "template.html" %}
 
-    <title>关于灵睿</title>
-    <link href="/css/ionic.min.css" rel="stylesheet">
-    <link href="/css/app.css" rel="stylesheet">
-</head>
-<body ng-controller="AppCtrl">
+{% block HeadBlock %}
+<title>show1</title>
+{% endblock %}
 
-<div class="list card">
-    <div class="item item-avatar">
-        <img src="/upload/dogs/11.jpg">
+{% block BodyBlock %}
+<button onclick="do_ajax()">do ajax</button>
+<div id="main" style="width: 1000px;height:600px;"></div>
+{% endblock %}
 
-        <h2>灵睿犬舍</h2>
-
-        <p>Ling Rui's Kennel　　CKU: 86056</p>
-    </div>
-    <div class="item item-body">
-        <img class="full-image" src="/upload/dogs/11.jpg">
-
-        <p>{{ Global.Value|safe }}</p>
-    </div>
-</div>
-
-<script src="/js/ionic.bundle.min.js"></script>
-<script type="text/javascript" src="/js/script.js"></script>
-</body>
-</html>
+{% block ScriptBlock %}
+<script src="/js/app-show1.js"></script>
+{% endblock %}

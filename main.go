@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-macaron/macaron"
+	"github.com/Unknwon/macaron"
 	"github.com/macaron-contrib/cache"
 	"github.com/macaron-contrib/pongo2"
 	"github.com/macaron-contrib/session"
@@ -31,6 +31,7 @@ func newInstance() *macaron.Macaron {
 	//路由跳转
 	m.Get("/", DoIndex)
 	m.Get("/index", DoIndex)
+	m.Any("/overview", DoOverview)
 	return m
 }
 
@@ -41,6 +42,14 @@ func main() {
 	fmt.Printf("-- Listen %v --\n", listenAddr)
 	err := http.ListenAndServe(listenAddr, m)
 	if err != nil {
-		Log.Fatalf("Fail to start server: %v", err)
+		AppLog.Fatalf("Fail to start server: %v", err)
 	}
 }
+
+//func main() {
+//	m := macaron.Classic()
+//	m.Get("/", func() string {
+//		return "Hello world!"
+//	})
+//	m.Run()
+//}
