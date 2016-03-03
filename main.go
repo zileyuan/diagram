@@ -8,6 +8,8 @@ import (
 	"github.com/go-macaron/pongo2"
 	"github.com/go-macaron/session"
 	"gopkg.in/macaron.v1"
+
+	"github.com/zileyuan/diagram/app"
 )
 
 func newMacaron() *macaron.Macaron {
@@ -29,27 +31,19 @@ func newMacaron() *macaron.Macaron {
 func newInstance() *macaron.Macaron {
 	m := newMacaron()
 	//路由跳转
-	m.Get("/", DoIndex)
-	m.Get("/index", DoIndex)
-	m.Any("/overview", DoOverview)
+	m.Get("/", app.DoIndex)
+	m.Get("/index", app.DoIndex)
+	m.Any("/overview", app.DoOverview)
 	return m
 }
 
 func main() {
-	fmt.Printf("-- Start %v Service --\n", AppName)
+	fmt.Printf("-- Start %v Service --\n", app.AppName)
 	m := newInstance()
-	listenAddr := fmt.Sprintf("0.0.0.0:%d", HttpPort)
+	listenAddr := fmt.Sprintf("0.0.0.0:%d", app.HttpPort)
 	fmt.Printf("-- Listen %v --\n", listenAddr)
 	err := http.ListenAndServe(listenAddr, m)
 	if err != nil {
-		AppLog.Fatalf("Fail to start server: %v", err)
+		app.AppLog.Fatalf("Fail to start server: %v", err)
 	}
 }
-
-//func main() {
-//	m := macaron.Classic()
-//	m.Get("/", func() string {
-//		return "Hello world!"
-//	})
-//	m.Run()
-//}

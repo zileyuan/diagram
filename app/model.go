@@ -1,4 +1,4 @@
-package main
+package app
 
 type Overview struct {
 	Cscode string  `json:"cscode"`
