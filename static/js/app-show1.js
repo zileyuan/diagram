@@ -1,3 +1,13 @@
+function do_card() {
+    var data = {
+    };
+    ajax("POST", "/cardtotal", data, function (result) {
+        var data = result.data;
+        $$('dtable').clearAll();
+        $$('dtable').parse(data);
+    })
+}
+
 function do_ajax() {
     var data = {
         StartDate: $$('sd').getValue(),
@@ -150,4 +160,32 @@ webix.ui({
             stringResult: true
         }
     ]
+});
+
+grida = webix.ui({
+    container:"testA",
+    view:"datatable",
+    id: "dtable",
+    columns:[
+        { id:"huiyk_id",	header:"卡号"},
+        { id:"huiyk_germc",	header:"持卡人"},
+        { id:"name",	header:"卡类型"},
+        { id:"chuz",	header:"本期储值"},
+        { id:"xiaof",	header:"本期消费"},
+        { id:"zxye",	header:"期初金额"},
+        { id:"zdye",	header:"本期余额"},
+        { id:"zzye",	header:"最终余额"},
+        { id:"crmobile",	header:"手机号"},
+        { id:"huiyk_zhuangt",	header:"卡状态"},
+        { id:"huiyk_fakrq",	header:"发卡日期"},
+        { id:"huiyk_jiezrq",	header:"截止日期"}
+    ],
+    select:"cell",
+    autowidth:true,
+    pager:{
+        template:"{common.first()} {common.prev()} {common.pages()} {common.next()} {common.last()}",
+        container:"paging_here",
+        size:100,
+        group:5
+    },
 });

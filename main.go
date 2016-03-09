@@ -34,6 +34,7 @@ func newInstance() *macaron.Macaron {
 	m.Get("/", app.DoIndex)
 	m.Get("/index", app.DoIndex)
 	m.Any("/overview", app.DoOverview)
+	m.Any("/cardtotal", app.DoCardTotal)
 	return m
 }
 
