@@ -1,3 +1,5 @@
+webix.i18n.setLocale("zh-CN");
+
 function ajax(req_method, req_url, req_data, done_func, fail_func, always_func) {
     var setting = {
         url: req_url,

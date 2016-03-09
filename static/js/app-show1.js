@@ -128,28 +128,46 @@ function do_ajax() {
 }
 
 
-webix.ui(
-    {
-        view: "toolbar",
-        container: "toolbar",
-        elements: [
-            {
-                view: "datepicker",
-                id: "sd",
-                align: "right",
-                label: 'Start Date',
-                labelWidth: 150,
-                stringResult: true
+webix.ui({
+    view: "toolbar",
+    container: "toolbar",
+    elements: [
+        {
+            view: "datepicker",
+            id: "sd",
+            align: "right",
+            label: 'Start Date',
+            labelWidth: 150,
+            stringResult: true
 
-            },
-            {
-                view: "datepicker",
-                id: "fd",
-                align: "right",
-                label: 'Finish Date',
-                labelWidth: 150,
-                stringResult: true
-            }
-        ]
-    });
+        },
+        {
+            view: "datepicker",
+            id: "fd",
+            align: "right",
+            label: 'Finish Date',
+            labelWidth: 150,
+            stringResult: true
+        }
+    ]
+});
+
+webix.ui({
+    container:"listA",
+    weekHeader:true,
+    date:new Date(2016,3,16),
+    view:"calendar",
+    events:webix.Date.isHoliday,
+    timepicker:true
+});
+
+webix.ui({
+    container:"listB",
+    weekHeader:true,
+    weekNumber:true,
+    date:new Date(2016,3,16),
+    view:"calendar",
+    events:webix.Date.isHoliday,
+    width:290
+});
 
