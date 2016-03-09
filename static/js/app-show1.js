@@ -1,5 +1,8 @@
 function do_ajax() {
-    var data = {};
+    var data = {
+        StartDate: $$('sd').getValue(),
+        FinishDate: $$('fd').getValue(),
+    };
     ajax("POST", "/overview", data, function (result) {
         //webix.message(JSON.stringify(result));
         // 基于准备好的dom，初始化echarts实例
@@ -12,8 +15,7 @@ function do_ajax() {
         zj = [];
         rs = [];
         rj = [];
-        for (i in data)
-        {
+        for (i in data) {
             obj = data[i];
             xAxisData.push(obj.csname);
             ss.push(obj.samt)
@@ -28,93 +30,93 @@ function do_ajax() {
 
 // 指定图表的配置项和数据
         option = {
-            tooltip : {
+            tooltip: {
                 trigger: 'axis'
             },
             toolbox: {
-                show : true,
-                feature : {
-                    mark : {show: true},
-                    dataView : {show: true, readOnly: false},
+                show: true,
+                feature: {
+                    mark: {show: true},
+                    dataView: {show: true, readOnly: false},
                     magicType: {show: true, type: ['line', 'bar']},
-                    restore : {show: true},
-                    saveAsImage : {show: true}
+                    restore: {show: true},
+                    saveAsImage: {show: true}
                 }
             },
-            calculable : true,
+            calculable: true,
             legend: {
                 data: ["实收金额", "销售金额", "折扣金额", "桌数", "桌均", "人数", "人均"],
             },
-            xAxis : [
+            xAxis: [
                 {
-                    type : 'category',
-                    data : xAxisData,
+                    type: 'category',
+                    data: xAxisData,
                 }
             ],
-            yAxis : [
+            yAxis: [
                 {
-                    type : 'value',
-                    name : '金额',
+                    type: 'value',
+                    name: '金额',
                     min: 0,
                     max: 2500000,
                     interval: 500000,
-                    axisLabel : {
+                    axisLabel: {
                         formatter: '{value} 元'
                     }
                 },
                 {
-                    type : 'value',
-                    name : '人数',
+                    type: 'value',
+                    name: '人数',
                     min: 0,
                     max: 25000,
                     interval: 5000,
-                    axisLabel : {
+                    axisLabel: {
                         formatter: '{value}'
                     }
                 }
             ],
-            series : [
+            series: [
 
                 {
-                    name:'实收金额',
-                    type:'bar',
-                    data:ss
+                    name: '实收金额',
+                    type: 'bar',
+                    data: ss
                 },
                 {
-                    name:'销售金额',
-                    type:'line',
+                    name: '销售金额',
+                    type: 'line',
                     yAxisIndex: 0,
-                    data:xs
+                    data: xs
                 },
                 {
-                    name:'折扣金额',
-                    type:'line',
+                    name: '折扣金额',
+                    type: 'line',
                     yAxisIndex: 0,
-                    data:zk
+                    data: zk
                 },
                 {
-                    name:'桌数',
-                    type:'line',
+                    name: '桌数',
+                    type: 'line',
                     yAxisIndex: 1,
-                    data:zs
+                    data: zs
                 },
                 {
-                    name:'桌均',
-                    type:'line',
+                    name: '桌均',
+                    type: 'line',
                     yAxisIndex: 1,
-                    data:zj
+                    data: zj
                 },
                 {
-                    name:'人数',
-                    type:'line',
+                    name: '人数',
+                    type: 'line',
                     yAxisIndex: 1,
-                    data:rs
+                    data: rs
                 },
                 {
-                    name:'人均',
-                    type:'line',
+                    name: '人均',
+                    type: 'line',
                     yAxisIndex: 1,
-                    data:rj
+                    data: rj
                 }
             ]
         };
@@ -124,4 +126,30 @@ function do_ajax() {
 
     })
 }
+
+
+webix.ui(
+    {
+        view: "toolbar",
+        container: "toolbar",
+        elements: [
+            {
+                view: "datepicker",
+                id: "sd",
+                align: "right",
+                label: 'Start Date',
+                labelWidth: 150,
+                stringResult: true
+
+            },
+            {
+                view: "datepicker",
+                id: "fd",
+                align: "right",
+                label: 'Finish Date',
+                labelWidth: 150,
+                stringResult: true
+            }
+        ]
+    });
 
