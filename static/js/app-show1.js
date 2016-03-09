@@ -151,23 +151,3 @@ webix.ui({
         }
     ]
 });
-
-webix.ui({
-    container:"listA",
-    weekHeader:true,
-    date:new Date(2016,3,16),
-    view:"calendar",
-    events:webix.Date.isHoliday,
-    timepicker:true
-});
-
-webix.ui({
-    container:"listB",
-    weekHeader:true,
-    weekNumber:true,
-    date:new Date(2016,3,16),
-    view:"calendar",
-    events:webix.Date.isHoliday,
-    width:290
-});
-
