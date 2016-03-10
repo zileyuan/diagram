@@ -64,6 +64,14 @@ func DoOverview(ctx *macaron.Context) {
 }
 
 func DoCardTotal(ctx *macaron.Context) {
+	startDateStr := ctx.Query("StartDate")
+	finishDateStr := ctx.Query("FinishDate")
+	KH := ctx.Query("KH")
+	Show0 := ctx.QueryInt("Show0")
+	CardType := ctx.Query("CardType")
+	CardPoint := ctx.Query("CardPoint")
+	fmt.Printf("%v %v %v %v %v %v", startDateStr, finishDateStr, KH, Show0, CardType, CardPoint)
+
 	sql := `select huiyk_id,case when (crname='' or crname is null) then huiyk_germc else crname end khmc,sscate.name,isnull(x.chuz,0) chuz,isnull(y.xiaof,0) xiaof,zxye,zdye,zzye,crmobile
        ,case huiyk_zhuangt when '01' then '启用' when '04' then '挂失' when '03' then '作废' end as 卡状态,huiyk_fakrq,huiyk_jiezrq
 from huiyk left join bizfolio on bizfolio.account=huiyk_danwid

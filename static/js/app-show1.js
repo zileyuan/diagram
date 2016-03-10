@@ -1,5 +1,11 @@
 function do_card() {
     var data = {
+        StartDate: $$('sd1').getValue(),
+        FinishDate: $$('fd1').getValue(),
+        KH: $$('kh').getValue(),
+        Show0: $$('show0').getValue(),
+        CardType: $$('cardtype').getValue(),
+        CardPoint: $$('cardpoint').getValue(),
     };
     ajax("POST", "/cardtotal", data, function (result) {
         var data = result.data;
@@ -159,6 +165,66 @@ webix.ui({
             labelWidth: 150,
             stringResult: true
         }
+    ]
+});
+
+webix.ui({
+    view: "toolbar",
+    container: "toolbar2",
+    elements: [
+        {
+            view: "datepicker",
+            id: "sd1",
+            align: "right",
+            label: 'Start Date',
+            labelWidth: 150,
+            stringResult: true
+
+        },
+        {
+            view: "datepicker",
+            id: "fd1",
+            align: "right",
+            label: 'Finish Date',
+            labelWidth: 150,
+            stringResult: true
+        },
+        {
+            view:"text",
+            id: "kh",
+            label:"卡号"
+        },
+        {
+            view:"checkbox",
+            label:"不显示全零金额",
+            id: "show0",
+            uncheckValue: 0,
+            checkValue: 1,
+        },
+        {
+            view:"multiselect",
+            label:"卡类型",
+            id: "cardtype",
+            labelWidth:100,
+            options:[
+                { id:1, value:"金卡" },
+                { id:2, value:"银卡" },
+                { id:3, value:"通卡" },
+                { id:4, value:"贴卡" }
+            ],
+        },
+        {
+            view: "combo",
+            id:"cardpoint",
+            width:400,
+            label: '发卡店',
+            labelWidth:220,
+            options:[
+                { id:"001", value:"一店"   },
+                { id:"002", value:"二店"   },
+                { id:"003", value:"三店" }
+            ]
+        },
     ]
 });
 
