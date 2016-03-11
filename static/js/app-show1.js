@@ -284,7 +284,7 @@ grida = webix.ui({
     id: "dtable",
     columns:[
         { id:"huiyk_id",	header:"卡号", template: function(obj) {
-            return "<a href = '/carddetail?card=" + obj.huiyk_id + "'>" + obj.huiyk_id + "</a>";
+            return "<a target='_blank' href = '/carddetail?card=" + obj.huiyk_id + "'>" + obj.huiyk_id + "</a>";
         }, footer:[
             { height:40, text:"xiaoji", colspan:3 },
             { height:40, text:"xiaojiavg", colspan:3 },
