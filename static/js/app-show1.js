@@ -228,6 +228,24 @@ webix.ui({
     ]
 });
 
+webix.ui.datafilter.pageAvgColumn = webix.extend({
+    refresh:function(master, node, value){
+        var result = 0;
+        var page = master.getPage();
+        var pager = master.getPager();
+        var cc = pager.data.size;
+        var iid = master.getIdByIndex(page * cc);
+        master.mapCells(iid, value.columnId, cc, 1, function(value){
+            value = value*1;
+            if (!isNaN(value))
+                result+=value;
+            return value;
+        });
+
+        node.firstChild.innerHTML = Math.round(result / cc);
+    }
+}, webix.ui.datafilter.summColumn);
+
 webix.ui.datafilter.pageSummColumn = webix.extend({
     refresh:function(master, node, value){
         var result = 0;
@@ -246,6 +264,20 @@ webix.ui.datafilter.pageSummColumn = webix.extend({
     }
 }, webix.ui.datafilter.summColumn);
 
+webix.ui.datafilter.avgColumn = webix.extend({
+    refresh:function(master, node, value){
+        var result = 0;
+        master.mapCells(null, value.columnId, null, 1, function(value){
+            value = value*1;
+            if (!isNaN(value))
+                result+=value;
+            return value;
+        });
+        
+        node.firstChild.innerHTML = Math.round(result / master.count());
+    }
+}, webix.ui.datafilter.summColumn);
+
 grida = webix.ui({
     container:"testA",
     view:"datatable",
@@ -253,13 +285,17 @@ grida = webix.ui({
     columns:[
         { id:"huiyk_id",	header:"卡号", footer:[
             { height:40, text:"xiaoji", colspan:3 },
-            { height:80, text:"heji", colspan:3 }
+            { height:40, text:"xiaojiavg", colspan:3 },
+            { height:40, text:"heji", colspan:3 },
+            { height:40, text:"hejiavg", colspan:3 }
         ]},
         { id:"huiyk_germc",	header:"持卡人"},
         { id:"name",	header:"卡类型"},
         { id:"chuz",	header:"本期储值", footer:[
             { content:"pageSummColumn" },
+            { content:"pageAvgColumn" },
             { content:"summColumn" },
+            { content:"avgColumn" },
         ]},
         { id:"xiaof",	header:"本期消费"},
         { id:"zxye",	header:"期初金额"},
