@@ -273,7 +273,7 @@ webix.ui.datafilter.avgColumn = webix.extend({
                 result+=value;
             return value;
         });
-        
+
         node.firstChild.innerHTML = Math.round(result / master.count());
     }
 }, webix.ui.datafilter.summColumn);
@@ -283,7 +283,9 @@ grida = webix.ui({
     view:"datatable",
     id: "dtable",
     columns:[
-        { id:"huiyk_id",	header:"卡号", footer:[
+        { id:"huiyk_id",	header:"卡号", template: function(obj) {
+            return "<a href = '/carddetail?card=" + obj.huiyk_id + "'>" + obj.huiyk_id + "</a>";
+        }, footer:[
             { height:40, text:"xiaoji", colspan:3 },
             { height:40, text:"xiaojiavg", colspan:3 },
             { height:40, text:"heji", colspan:3 },
