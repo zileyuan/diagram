@@ -13,16 +13,20 @@ type Overview struct {
 }
 
 type CardTotal struct {
-	Huiyk_id      string  `json:"huiyk_id"`      //卡号
-	Huiyk_germc   string  `json:"huiyk_germc"`   //持卡人
-	Name          string  `json:"name"`          //卡类型
-	Chuz          float64 `json:"chuz"`          //本期储值
-	Xiaof         float64 `json:"xiaof"`         //本期消费
-	Zxye          float64 `json:"zxye"`          //期初金额
-	Zdye          float64 `json:"zdye"`          //本期余额
-	Zzye          float64 `json:"zzye"`          //最终余额
-	Crmobile      string  `json:"crmobile"`      //手机号
-	Huiyk_zhuangt string  `json:"huiyk_zhuangt"` //卡状态
-	Huiyk_fakrq   string  `json:"huiyk_fakrq"`   //发卡日期
-	Huiyk_jiezrq  string  `json:"huiyk_jiezrq"`  //截止日期
+	Huiykid      string  `json:"huiykid"`      //卡号
+	Crname       string  `json:"crname"`       //持卡人
+	Cardtype     string  `json:"cardtype"`     //卡类型
+	Credit       float64 `json:"credit"`       //本期储值
+	Debit        float64 `json:"debit"`        //本期消费
+	Balance      float64 `json:"balance"`      //本期余额
+	Acbalance    float64 `json:"acbalance"`    //最终余额
+	Crmobile     string  `json:"crmobile"`     //手机号
+	Huiykzhuangt string  `json:"huiykzhuangt"` //卡状态
+	Huiykfakrq   string  `json:"huiykfakrq"`   //发卡日期
+	Huiykjiezrq  string  `json:"huiykjiezrq"`  //截止日期
+}
+
+type Cardtype struct {
+	Id    string `json:"id"`
+	Value string `json:"value"`
 }

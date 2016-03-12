@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/axgle/mahonia"
@@ -63,149 +64,116 @@ func DoOverview(ctx *macaron.Context) {
 	}
 }
 
+func DoCardType(ctx *macaron.Context) {
+	sql := `select uid as id,name as value from sscate where type='CardType'`
+	fmt.Println(sql)
+	rows, err := AppDB.Query(sql)
+	defer rows.Close()
+	cts := []Cardtype{}
+	for rows.Next() {
+		var ct Cardtype
+		//fmt.Println("------------111111111111------------------------")
+		err = rows.ScanStructByName(&ct)
+		//fmt.Println("------------222222222222222------------------------")
+		if err == nil {
+			ct.Value = GBKToUtf8(ct.Value)
+			cts = append(cts, ct)
+		}
+	}
+	ctx.JSON(200, &ContextResult{
+		Success: true,
+		Data:    cts,
+	})
+}
+
 func DoCardTotal(ctx *macaron.Context) {
 	startDateStr := ctx.Query("StartDate")
 	finishDateStr := ctx.Query("FinishDate")
-	KH := ctx.Query("KH")
+	KH := ctx.Query("KH") + "%"
 	Show0 := ctx.QueryInt("Show0")
 	CardType := ctx.Query("CardType")
+	strs := strings.Split(CardType, ",")
+	var sqltext string
+	for _, j := range strs {
+		sqltext = sqltext + ` or huiyk_leixid='` + j + `'`
+	}
+	sqltext = strings.Replace(sqltext, `or`, `where (`, 1) + ")"
+	fmt.Println(sqltext)
+
+	//startDate := String2Time(TimeLayout, startDateStr)
+	//finishDate := String2Time(TimeLayout, finishDateStr)
+
+	//startDateStr = fmt.Sprintf("%04d-%02d-%02d", startDate.Year(), startDate.Month(), startDate.Day())
+	//finishDateStr = fmt.Sprintf("%04d-%02d-%02d", finishDate.Year(), finishDate.Month(), finishDate.Day())
+	//fmt.Println(startDateStr, finishDateStr)
 	CardPoint := ctx.Query("CardPoint")
 	fmt.Printf("%v %v %v %v %v %v", startDateStr, finishDateStr, KH, Show0, CardType, CardPoint)
-
-	sql := `select huiyk_id,case when (crname='' or crname is null) then huiyk_germc else crname end khmc,sscate.name,isnull(x.chuz,0) chuz,isnull(y.xiaof,0) xiaof,zxye,zdye,zzye,crmobile
-       ,case huiyk_zhuangt when '01' then '启用' when '04' then '挂失' when '03' then '作废' end as 卡状态,huiyk_fakrq,huiyk_jiezrq
-from huiyk left join bizfolio on bizfolio.account=huiyk_danwid
-left join crcustomer on huiyk_gerid=crcustomer.uid
-left join sscate on huiyk_leixid=sscate.uid
-left join
-(
-select bizfolio.account,isnull(sum(Credit),0) as chuz
-from bizfolio left join huiyk on huiyk_danwid=bizfolio.account
-where bizfolio.Type='NCCard' and CONVERT(char(10), bizfolio.sysdate, 112)  between '@bdate@' and '@edate@'
-IIF{xians=0,"and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{xians=1,"and huiyk_zhuangt='01'"}
-IIF{xians=2,"and huiyk_zhuangt='04'"}
-IIF{xians=3,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)>1) and huiyk_zhuangt='03'"}
-IIF{xians=4,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)=1) and huiyk_zhuangt='03'"}
-IIF{xians=5,"and huiyk_jiezrq<@edate@ and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{storeid, "and left(huiyk_danwmc,4)='@storeid@'"}
-IIF{caozy,"and opid='@caozy@'"}
-group by bizfolio.Account ) x on bizfolio.account=x.account
-left join
-(
-select bizfolio.account,isnull(sum(Debit),0) as xiaof
-from bizfolio  left join huiyk on huiyk_danwid=bizfolio.account
-where bizfolio.Type='NCCard' and CONVERT(char(10), bizfolio.sysdate, 112) between '@bdate@' and '@edate@'
-IIF{xians=0,"and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{xians=1,"and huiyk_zhuangt='01'"}
-IIF{xians=2,"and huiyk_zhuangt='04'"}
-IIF{xians=3,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)>1) and huiyk_zhuangt='03'"}
-IIF{xians=4,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)=1) and huiyk_zhuangt='03'"}
-IIF{xians=5,"and huiyk_jiezrq<@edate@ and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{storeid, "and left(huiyk_danwmc,4)='@storeid@'"}
-IIF{caozy,"and opid='@caozy@'"}
-group by bizfolio.account
-)y on bizfolio.account=y.account
-left join
-(select sum(zxye) zxye,sum(zdye) zdye,sum(zzye) zzye,account from
-(
-select sum(balance) zxye,0 zdye,0 zzye,account from bizfolio left join huiyk on bizfolio.account=huiyk_danwid
-where bizfolio.Type='NCCard' and bizfolio.uid in (select max(uid) as zxuid from bizfolio where CONVERT(char(10),bizfolio.sysdate,112)<'@bdate@' and Type='NCCard' group by account)
-IIF{xians=0,"and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{xians=1,"and huiyk_zhuangt='01'"}
-IIF{xians=2,"and huiyk_zhuangt='04'"}
-IIF{xians=3,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)>1) and huiyk_zhuangt='03'"}
-IIF{xians=4,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)=1) and huiyk_zhuangt='03'"}
-IIF{xians=5,"and huiyk_jiezrq<@edate@ and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{storeid, "and left(huiyk_danwmc,4)='@storeid@'"}
-group by account
-union
-select 0 zxye,sum(balance) zdye,0 zzye,account
-from bizfolio left join huiyk on bizfolio.account=huiyk_danwid
-where Type='NCCard' and bizfolio.uid in (select max(uid) as zduid from bizfolio where CONVERT(char(10),bizfolio.sysdate,112)<='@edate@' and Type='NCCard' group by account)
-IIF{xians=0,"and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{xians=1,"and huiyk_zhuangt='01'"}
-IIF{xians=2,"and huiyk_zhuangt='04'"}
-IIF{xians=3,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)>1) and huiyk_zhuangt='03'"}
-IIF{xians=4,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)=1) and huiyk_zhuangt='03'"}
-IIF{xians=5,"and huiyk_jiezrq<@edate@ and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{storeid, "and left(huiyk_danwmc,4)='@storeid@'"}
-group by account
-union
-select 0 zxye,0 zdye,sum(balance) zzye,account
-from bizfolio left join huiyk on bizfolio.account=huiyk_danwid
-where Type='NCCard' and bizfolio.uid in (select max(uid) as zduid from bizfolio where Type='NCCard'  group by account)
-IIF{xians=0,"and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{xians=1,"and huiyk_zhuangt='01'"}
-IIF{xians=2,"and huiyk_zhuangt='04'"}
-IIF{xians=3,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)>1) and huiyk_zhuangt='03'"}
-IIF{xians=4,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)=1) and huiyk_zhuangt='03'"}
-IIF{xians=5,"and huiyk_jiezrq<@edate@ and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{storeid, "and left(huiyk_danwmc,4)='@storeid@'"}
-group by account
-)a
-group by account
-)n on bizfolio.account=n.account
-where 1=1
-IIF{xdate,"and huiyk_fakrq>='@xdate@'"}
-IIF{ydate,"and huiyk_fakrq<='@ydate@'"}
-IIF{kehjl, "and crcustomer.crmail3='@kehjl@'"}
-IIF{cardid,"and huiyk.huiyk_id like '%@cardid@%'"}
-IIF{cardman,"and huiyk_germc like '%@cardman@%'"}
-IIF{klx,"and huiyk_leixid='@klx@'"}
-IIF{storeid, "and left(huiyk_danwmc,4)='@storeid@'"}
-IIF{itemid=0,"and (zxye<>0 or zdye<>0 or zzye<>0 or x.chuz<>0 or y.xiaof<>0)"}
-IIF{xians=0,"and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-IIF{xians=1,"and huiyk_zhuangt='01'"}
-IIF{xians=2,"and huiyk_zhuangt='04'"}
-IIF{xians=3,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)>1) and huiyk_zhuangt='03'"}
-IIF{xians=4,"and huiyk_danwid in (select huiyk_danwid from huiyk group by huiyk_danwid having count(huiyk_danwid)=1) and huiyk_zhuangt='03'"}
-IIF{xians=5,"and huiyk_jiezrq<@edate@ and (huiyk_zhuangt='01' or huiyk_zhuangt='04')"}
-group by huiyk_id,crname,huiyk_germc,x.chuz,y.xiaof,zxye,zdye,zzye,sscate.name,sscate.name,huiyk_zhuangt,crmobile,huiyk_fakrq,huiyk_jiezrq
-order by huiyk_id`
+	sql := `select huiyk_id as huiykid, crname,cardtype,credit,debit,balance,acbalance,
+	crmobile,huiyk_zhuangt as huiykzhuangt,huiyk_fakrq as huiykfakrq,
+	huiyk_jiezrq as huiykjiezrq from (SELECT HUIYK.huiyk_id,crCustomer.crName,
+	ssCate.Name as cardtype,SUM(BizFolio.Credit) AS credit,
+	SUM(BizFolio.Debit) AS debit,crAccount.acBalance,crCustomer.crMobile,
+	HUIYK.huiyk_zhuangt,HUIYK.huiyk_fakrq, HUIYK.huiyk_jiezrq,crAccount.UID 
+	FROM HUIYK INNER JOIN crAccount ON HUIYK.huiyk_danwid = crAccount.UID 
+	INNER JOIN BizFolio ON crAccount.UID = BizFolio.Account INNER JOIN ssCate 
+	ON HUIYK.huiyk_leixid = ssCate.UID LEFT OUTER JOIN crCustomer ON 
+	HUIYK.huiyk_Gerid = crCustomer.UID %s and sysdate between '%s' and '%s' and huiyk_id like '%s' GROUP BY HUIYK.huiyk_id, crCustomer.crName,
+	ssCate.Name,crAccount.acBalance, crCustomer.crMobile, HUIYK.huiyk_zhuangt,
+	HUIYK.huiyk_fakrq, HUIYK.huiyk_jiezrq,crAccount.UID) a,(SELECT BizFolio.Account,
+	BizFolio.Balance FROM BizFolio INNER JOIN (SELECT MAX(UID) AS uid, Account 
+	FROM BizFolio GROUP BY Account) m ON BizFolio.UID = m.uid) b where a.uid=b.account`
+	//sql := `select huiyk_id`
+	//sql := `select huiyk_id as huiykid from huiyk`
+	sql = fmt.Sprintf(sql, sqltext, startDateStr, finishDateStr, KH)
 	fmt.Println(sql)
 	rows, err := AppDB.Query(sql)
 	if err != nil {
-		cts := []CardTotal{}
-		for i := 0; i < 10000; i++ {
-			ct := CardTotal{
-				Huiyk_id:      "001",
-				Huiyk_germc:   "咱梦" + fmt.Sprintf("%05d", i),
-				Name:          "储值卡",
-				Chuz:          100.0,
-				Xiaof:         120.0,
-				Zxye:          100.0,
-				Zdye:          200.0,
-				Zzye:          300.0,
-				Crmobile:      "1390000",
-				Huiyk_zhuangt: "启用",
-				Huiyk_fakrq:   "20160202",
-				Huiyk_jiezrq:  "20170202",
-			}
-			cts = append(cts, ct)
-		}
-		ctx.JSON(200, &ContextResult{
-			Success: true,
-			Data:    cts,
-		})
-		return
+		//		cts := []CardTotal{}
+		//		for i := 0; i < 10000; i++ {
+		//			ct := CardTotal{
+		//				Huiykid: "001",
+		//				//Crname:        "咱梦" + fmt.Sprintf("%05d", i),
+		//				//Cardtype:  "储值卡",
+		//				//Credit:    100.0,
+		//				//Debit:     120.0,
+		//				//Balance:   200.0,
+		//				//Acbalance: 300.0,
+		//				//Crmobile:      "1390000",
+		//				//Huiyk_zhuangt: "启用",
+		//				//Huiyk_fakrq:   "20160202",
+		//				//Huiyk_jiezrq:  "20170202",
+		//			}
+		//			cts = append(cts, ct)
+		//		}
+		//		ctx.JSON(200, &ContextResult{
+		//			Success: true,
+		//			Data:    cts,
+		//		})
+		//		return
 	}
 	fmt.Printf("Query %v", err)
+	fmt.Println("------------------------------------")
 	defer rows.Close()
 	cts := []CardTotal{}
 	for rows.Next() {
 		var ct CardTotal
+		//fmt.Println("------------111111111111------------------------")
 		err = rows.ScanStructByName(&ct)
+		//fmt.Println("------------222222222222222------------------------")
+
 		if err == nil {
-			ct.Huiyk_germc = GBKToUtf8(ct.Huiyk_germc)
-			ct.Name = GBKToUtf8(ct.Name)
-			ct.Huiyk_zhuangt = GBKToUtf8(ct.Huiyk_zhuangt)
+			ct.Huiykid = GBKToUtf8(ct.Huiykid)
+			ct.Crname = GBKToUtf8(ct.Crname)
+			ct.Cardtype = GBKToUtf8(ct.Cardtype)
+			ct.Huiykzhuangt = GBKToUtf8(ct.Huiykzhuangt)
 			cts = append(cts, ct)
+		} else {
+			fmt.Printf("**********%v*********", err)
 		}
 	}
 	fmt.Printf("999999999 %#v", cts)
-
-	if err == nil {
+	fmt.Printf("err %#v", err)
+	if true {
 		ctx.JSON(200, &ContextResult{
 			Success: true,
 			Data:    cts,
@@ -213,6 +181,7 @@ order by huiyk_id`
 	} else {
 		ctx.JSON(200, &ContextResult{
 			Success: false,
+			Data:    "error",
 		})
 	}
 }

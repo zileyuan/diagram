@@ -1,16 +1,34 @@
+$(document).ready(function() {
+	var data = {}
+	ajax("POST", "/cardtype", data, function (result) {
+		var list = $$('cardkind').getPopup().getList();
+		list.clearAll();
+		list.parse(result.data);
+	})
+})
+	
+
 function do_card() {
     var data = {
         StartDate: $$('sd1').getValue(),
         FinishDate: $$('fd1').getValue(),
         KH: $$('kh').getValue(),
         Show0: $$('show0').getValue(),
-        CardType: $$('cardtype').getValue(),
+        CardType: $$('cardkind').getValue(),
         CardPoint: $$('cardpoint').getValue(),
     };
+	if (data.CardType == "") {
+		webix.message("MUST select CardType ");
+		return
+	}
     ajax("POST", "/cardtotal", data, function (result) {
+		if (result.success) {
         var data = result.data;
         $$('dtable').clearAll();
         $$('dtable').parse(data);
+		} else {
+			webix.message(result.data);
+		}
     })
 }
 
@@ -204,14 +222,15 @@ webix.ui({
         {
             view:"multiselect",
             label:"卡类型",
-            id: "cardtype",
+            id: "cardkind",
             labelWidth:100,
-            options:[
-                { id:1, value:"金卡" },
-                { id:2, value:"银卡" },
-                { id:3, value:"通卡" },
-                { id:4, value:"贴卡" }
-            ],
+			options: [],
+//            options: cardtype,[
+//                { id:1, value:"金卡" },
+//                { id:2, value:"银卡" },
+//                { id:3, value:"通卡" },
+//                { id:4, value:"贴卡" }
+//            ],
         },
         {
             view: "combo",
@@ -283,28 +302,27 @@ grida = webix.ui({
     view:"datatable",
     id: "dtable",
     columns:[
-        { id:"huiyk_id",	header:"卡号", footer:[
+        { id:"huiykid",	header:"卡号", footer:[
             { height:40, text:"xiaoji", colspan:3 },
             { height:40, text:"xiaojiavg", colspan:3 },
             { height:40, text:"heji", colspan:3 },
             { height:40, text:"hejiavg", colspan:3 }
         ]},
-        { id:"huiyk_germc",	header:"持卡人"},
-        { id:"name",	header:"卡类型"},
-        { id:"chuz",	header:"本期储值", footer:[
+        { id:"crname",	header:"持卡人"},
+        { id:"cardtype",header:"卡类型"},
+        { id:"credit",	header:"本期储值", footer:[
             { content:"pageSummColumn" },
             { content:"pageAvgColumn" },
             { content:"summColumn" },
             { content:"avgColumn" },
         ]},
-        { id:"xiaof",	header:"本期消费"},
-        { id:"zxye",	header:"期初金额"},
-        { id:"zdye",	header:"本期余额"},
-        { id:"zzye",	header:"最终余额"},
+        { id:"debit",	header:"本期消费"},
+        { id:"balance",	header:"本期余额"},
+        { id:"acbalance",	header:"最终余额"},
         { id:"crmobile",	header:"手机号"},
-        { id:"huiyk_zhuangt",	header:"卡状态"},
-        { id:"huiyk_fakrq",	header:"发卡日期"},
-        { id:"huiyk_jiezrq",	header:"截止日期"}
+        { id:"huiykzhuangt",	header:"卡状态"},
+        { id:"huiykfakrq",	header:"发卡日期"},
+        { id:"huiykjiezrq",	header:"截止日期"}
     ],
     select:"cell",
     autowidth:true,
