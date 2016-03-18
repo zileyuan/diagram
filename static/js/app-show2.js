@@ -162,6 +162,7 @@ var form = {
     view:"form",
     borderless:true,
     elements: [
+        { view:"text", label:'Uid', id:"Uid", hidden:true },
         {
             rows:[
                 {
