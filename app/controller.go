@@ -23,6 +23,10 @@ func DoIndex(ctx *macaron.Context) {
 	ctx.HTML(200, "show1")
 }
 
+func DoIndex2(ctx *macaron.Context) {
+	ctx.HTML(200, "show2")
+}
+
 func DoOverview(ctx *macaron.Context) {
 	startDateStr := ctx.Query("StartDate")
 	finishDateStr := ctx.Query("FinishDate")
@@ -64,6 +68,50 @@ func DoOverview(ctx *macaron.Context) {
 	}
 }
 
+func DoCustType(ctx *macaron.Context) {
+	sql := `select yudlx_id as id,yudlx_mingc as value from yudlx where itype=1`
+	fmt.Println(sql)
+	rows, err := AppDB.Query(sql)
+	defer rows.Close()
+	cts := []Custtype{}
+	for rows.Next() {
+		var ct Custtype
+		err = rows.ScanStructByName(&ct)
+		if err == nil {
+			ct.Id = GBKToUtf8(ct.Id)
+			ct.Value = GBKToUtf8(ct.Value)
+			cts = append(cts, ct)
+		}
+	}
+	ctx.JSON(200, &ContextResult{
+		Success: true,
+		Data:    cts,
+	})
+}
+
+func DoStoreCode(ctx *macaron.Context) {
+	sql := `select csCode as id,csName as value from cmstore order by csCode`
+	fmt.Println(sql)
+	rows, err := AppDB.Query(sql)
+	defer rows.Close()
+	cts := []Storecode{}
+	for rows.Next() {
+		var ct Storecode
+		//fmt.Println("------------111111111111------------------------")
+		err = rows.ScanStructByName(&ct)
+		//fmt.Println("------------222222222222222------------------------")
+		if err == nil {
+			ct.Id = GBKToUtf8(ct.Id)
+			ct.Value = GBKToUtf8(ct.Value)
+			cts = append(cts, ct)
+		}
+	}
+	ctx.JSON(200, &ContextResult{
+		Success: true,
+		Data:    cts,
+	})
+}
+
 func DoCardType(ctx *macaron.Context) {
 	sql := `select uid as id,name as value from sscate where type='CardType'`
 	fmt.Println(sql)
@@ -86,20 +134,91 @@ func DoCardType(ctx *macaron.Context) {
 	})
 }
 
+func DoCustomer(ctx *macaron.Context) {
+	StoreCode := ctx.Query("StoreCode")
+	CustType := ctx.Query("CustType")
+	CustName := ctx.Query("CustName")
+	Mobile := ctx.Query("Mobile")
+	var sqltext, sqltext2, sqltext3, sqltext4 string
+	if StoreCode == "" {
+		sqltext = "where 1=1"
+	} else {
+		sqltext = `where crID='` + StoreCode + `'`
+	}
+	if CustType != "" {
+		sqltext2 = `and crKehlx='` + CustType + `'`
+	}
+	if CustName != "" {
+		sqltext3 = `and (crName like '%` + CustName + `%' or crQCode like '` + CustName + `%')`
+	}
+	if Mobile != "" {
+		sqltext4 = `and crMobile like '` + Mobile + `%'`
+	}
+	fmt.Printf("%v %v %v %v", StoreCode, CustType, CustName, Mobile)
+	sql := `SELECT crCustomer.uid,isnull(csName,'') as store,crname,crtitle,
+	isnull(yudlx_mingc,'') as kehlx,crsex,crmobile as mobile,crbirthday 
+	FROM crCustomer INNER JOIN crPerson ON crCustomer.UID = crPerson.UID 
+	LEFT OUTER JOIN YUDLX ON crCustomer.crKehlx = YUDLX.YUDLX_ID 
+	LEFT OUTER JOIN cmStore ON crCustomer.crID = cmStore.csCode %s %s %s %s`
+	sql = fmt.Sprintf(sql, sqltext, sqltext2, sqltext3, sqltext4)
+	fmt.Println(sql)
+	rows, err := AppDB.Query(sql)
+	if err != nil {
+	}
+	fmt.Printf("Query %v", err)
+	fmt.Println("------------------------------------")
+	defer rows.Close()
+	cts := []Customer{}
+	for rows.Next() {
+		var ct Customer
+		err = rows.ScanStructByName(&ct)
+
+		if err == nil {
+			ct.Uid = GBKToUtf8(ct.Uid)
+			ct.Store = GBKToUtf8(ct.Store)
+			ct.Crname = GBKToUtf8(ct.Crname)
+			ct.Crtitle = GBKToUtf8(ct.Crtitle)
+			ct.Kehlx = GBKToUtf8(ct.Kehlx)
+			ct.Crsex = GBKToUtf8(ct.Crsex)
+			ct.Mobile = GBKToUtf8(ct.Mobile)
+			ct.Crbirthday = GBKToUtf8(ct.Crbirthday)
+			cts = append(cts, ct)
+		} else {
+			fmt.Printf("**********%v*********", err)
+		}
+	}
+	fmt.Printf("err %#v", err)
+	if true {
+		ctx.JSON(200, &ContextResult{
+			Success: true,
+			Data:    cts,
+		})
+	} else {
+		ctx.JSON(200, &ContextResult{
+			Success: false,
+			Data:    "error",
+		})
+	}
+}
+
 func DoCardTotal(ctx *macaron.Context) {
 	startDateStr := ctx.Query("StartDate")
 	finishDateStr := ctx.Query("FinishDate")
-	KH := ctx.Query("KH") + "%"
-	Show0 := ctx.QueryInt("Show0")
+	KH := ctx.Query("KH")
+	//KH := ctx.Query("KH") + "%"
+	//Show0 := ctx.QueryInt("Show0")
 	CardType := ctx.Query("CardType")
-	strs := strings.Split(CardType, ",")
-	var sqltext string
-	for _, j := range strs {
-		sqltext = sqltext + ` or huiyk_leixid='` + j + `'`
+	var sqltext, sqltext2, sqltext3 string
+	if CardType == "" {
+		sqltext = "where 1=1"
+	} else {
+		strs := strings.Split(CardType, ",")
+		for _, j := range strs {
+			sqltext = sqltext + ` or huiyk_leixid='` + j + `'`
+		}
+		sqltext = strings.Replace(sqltext, `or`, `where (`, 1) + ")"
+		fmt.Println(sqltext)
 	}
-	sqltext = strings.Replace(sqltext, `or`, `where (`, 1) + ")"
-	fmt.Println(sqltext)
-
 	//startDate := String2Time(TimeLayout, startDateStr)
 	//finishDate := String2Time(TimeLayout, finishDateStr)
 
@@ -107,9 +226,16 @@ func DoCardTotal(ctx *macaron.Context) {
 	//finishDateStr = fmt.Sprintf("%04d-%02d-%02d", finishDate.Year(), finishDate.Month(), finishDate.Day())
 	//fmt.Println(startDateStr, finishDateStr)
 	CardPoint := ctx.Query("CardPoint")
-	fmt.Printf("%v %v %v %v %v %v", startDateStr, finishDateStr, KH, Show0, CardType, CardPoint)
-	sql := `select huiyk_id as huiykid, crname,cardtype,credit,debit,balance,acbalance,
-	crmobile,huiyk_zhuangt as huiykzhuangt,huiyk_fakrq as huiykfakrq,
+	if CardPoint != "" {
+		sqltext2 = `and left(huiyk_danwmc,4)='` + CardPoint + `'`
+	}
+	if KH != "" {
+		sqltext3 = `and huiyk_id like '` + KH + `%'`
+	}
+
+	fmt.Printf("%v %v %v %v %v %v", startDateStr, finishDateStr, KH, CardType, CardPoint)
+	sql := `select huiyk_id as huiykid, isnull(crname,'') as crname,cardtype,credit,debit,balance,acbalance,
+	isnull(crmobile,'') as crmobile,case huiyk_zhuangt when '01' then '启用' when '04' then '挂失' when '03' then '作废' end as huiykzhuangt,huiyk_fakrq as huiykfakrq,
 	huiyk_jiezrq as huiykjiezrq from (SELECT HUIYK.huiyk_id,crCustomer.crName,
 	ssCate.Name as cardtype,SUM(BizFolio.Credit) AS credit,
 	SUM(BizFolio.Debit) AS debit,crAccount.acBalance,crCustomer.crMobile,
@@ -117,14 +243,14 @@ func DoCardTotal(ctx *macaron.Context) {
 	FROM HUIYK INNER JOIN crAccount ON HUIYK.huiyk_danwid = crAccount.UID 
 	INNER JOIN BizFolio ON crAccount.UID = BizFolio.Account INNER JOIN ssCate 
 	ON HUIYK.huiyk_leixid = ssCate.UID LEFT OUTER JOIN crCustomer ON 
-	HUIYK.huiyk_Gerid = crCustomer.UID %s and sysdate between '%s' and '%s' and huiyk_id like '%s' GROUP BY HUIYK.huiyk_id, crCustomer.crName,
+	HUIYK.huiyk_Gerid = crCustomer.UID %s and sysdate between '%s' and '%s' %s %s GROUP BY HUIYK.huiyk_id, crCustomer.crName,
 	ssCate.Name,crAccount.acBalance, crCustomer.crMobile, HUIYK.huiyk_zhuangt,
 	HUIYK.huiyk_fakrq, HUIYK.huiyk_jiezrq,crAccount.UID) a,(SELECT BizFolio.Account,
 	BizFolio.Balance FROM BizFolio INNER JOIN (SELECT MAX(UID) AS uid, Account 
 	FROM BizFolio GROUP BY Account) m ON BizFolio.UID = m.uid) b where a.uid=b.account`
 	//sql := `select huiyk_id`
 	//sql := `select huiyk_id as huiykid from huiyk`
-	sql = fmt.Sprintf(sql, sqltext, startDateStr, finishDateStr, KH)
+	sql = fmt.Sprintf(sql, sqltext, startDateStr, finishDateStr, sqltext2, sqltext3)
 	fmt.Println(sql)
 	rows, err := AppDB.Query(sql)
 	if err != nil {
@@ -171,7 +297,7 @@ func DoCardTotal(ctx *macaron.Context) {
 			fmt.Printf("**********%v*********", err)
 		}
 	}
-	fmt.Printf("999999999 %#v", cts)
+	//fmt.Printf("999999999 %#v", cts)
 	fmt.Printf("err %#v", err)
 	if true {
 		ctx.JSON(200, &ContextResult{

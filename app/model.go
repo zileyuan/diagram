@@ -30,3 +30,24 @@ type Cardtype struct {
 	Id    string `json:"id"`
 	Value string `json:"value"`
 }
+
+type Storecode struct {
+	Id    string `json:"id"`
+	Value string `json:"value"`
+}
+
+type Custtype struct {
+	Id    string `json:"id"`
+	Value string `json:"value"`
+}
+
+type Customer struct {
+	Uid        string `json:"uid"`
+	Store      string `json:"store"`
+	Crname     string `json:"crname"`
+	Crtitle    string `json:"crtitle"`
+	Kehlx      string `json:"kehlx"`
+	Crsex      string `json:"crsex"`
+	Mobile     string `json:"mobile"`
+	Crbirthday string `json:"crbirthday"`
+}
