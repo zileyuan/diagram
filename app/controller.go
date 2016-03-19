@@ -2,10 +2,12 @@ package app
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/axgle/mahonia"
+	"github.com/mozillazg/go-pinyin"
 	"gopkg.in/macaron.v1"
 )
 
@@ -155,8 +157,8 @@ func DoCustomer(ctx *macaron.Context) {
 		sqltext4 = `and crMobile like '` + Mobile + `%'`
 	}
 	fmt.Printf("%v %v %v %v", StoreCode, CustType, CustName, Mobile)
-	sql := `SELECT crCustomer.uid,isnull(csName,'') as store,crname,crtitle,
-	isnull(yudlx_mingc,'') as kehlx,crsex,crmobile as mobile,crbirthday 
+	sql := `SELECT crCustomer.uid,isnull(crID,'') as storeid,isnull(csName,'') as store,isnull(crname,'') as crname,isnull(crqcode,'') as crqcode,isnull(crtitle,'') as crtitle,
+	isnull(crKehlx,'') as kehlxid,isnull(yudlx_mingc,'') as kehlx,isnull(crsex,'') as crsex,isnull(crmobile,'') as mobile,isnull(crbirthday,'') as crbirthday 
 	FROM crCustomer INNER JOIN crPerson ON crCustomer.UID = crPerson.UID 
 	LEFT OUTER JOIN YUDLX ON crCustomer.crKehlx = YUDLX.YUDLX_ID 
 	LEFT OUTER JOIN cmStore ON crCustomer.crID = cmStore.csCode %s %s %s %s`
@@ -164,9 +166,8 @@ func DoCustomer(ctx *macaron.Context) {
 	fmt.Println(sql)
 	rows, err := AppDB.Query(sql)
 	if err != nil {
+		fmt.Printf("Query %v", err)
 	}
-	fmt.Printf("Query %v", err)
-	fmt.Println("------------------------------------")
 	defer rows.Close()
 	cts := []Customer{}
 	for rows.Next() {
@@ -198,6 +199,69 @@ func DoCustomer(ctx *macaron.Context) {
 			Success: false,
 			Data:    "error",
 		})
+	}
+}
+
+func DoUpdCust(ctx *macaron.Context) {
+	Uid := ctx.Query("uid")
+	Crname := ctx.Query("crname")
+	Kehlxid := ctx.Query("kehlxid")
+	Crqcode := ctx.Query("crqcode")
+	Storeid := ctx.Query("storeid")
+	if Crqcode == "" {
+		py := pinyin.NewArgs()
+		strs := pinyin.Pinyin(Crname, py)
+		//strs := py.Convert(Crname)
+		fmt.Println(strs)
+		for _, v := range strs {
+			Crqcode += string(v[0][0])
+		}
+	}
+	if Uid == "" {
+		sql := `select cast(max(uid) as int) as uid from crcustomer`
+		rows, err := AppDB.Query(sql)
+		if err != nil {
+			fmt.Printf("Query %v", err)
+		}
+		defer rows.Close()
+		var ct Customer
+		for rows.Next() {
+			err = rows.ScanStructByName(&ct)
+			if err == nil {
+				val, err := strconv.Atoi(ct.Uid)
+				val++
+				newid := fmt.Sprintf("%010d", val)
+				sql := `insert into crcustomer (uid,crID,crType,crname,crqcode,crkehlx) values ('%s','%s',1,'%s','%s','%s')`
+				sql = fmt.Sprintf(sql, newid, Storeid, Crname, Crqcode, Kehlxid)
+				fmt.Println(sql)
+				_, err = AppDB.Exec(sql)
+				if err == nil {
+					sql := `insert into crperson (uid,crSex,crMarriage) values ('%s','不详','不详')`
+					sql = fmt.Sprintf(sql, newid)
+					fmt.Println(sql)
+					_, err = AppDB.Exec(sql)
+					if err != nil {
+						fmt.Printf("QueryErr %v", sql)
+					} else {
+						ctx.JSON(200, &ContextResult{Success: true, Data: newid})
+
+					}
+				}
+			} else {
+				fmt.Printf("**********%v*********", err)
+			}
+		}
+	} else {
+		sql := `update crcustomer set crname='%s',crQCode='%s',crKehlx='%s' where uid='%s'`
+		sql = fmt.Sprintf(sql, Crname, Crqcode, Kehlxid, Uid)
+		fmt.Println(sql)
+		_, err := AppDB.Exec(sql)
+		if err != nil {
+			fmt.Printf("QueryErr %v", sql)
+		} else {
+			ctx.JSON(200, &ContextResult{Success: true, Data: ""})
+
+		}
 	}
 }
 
