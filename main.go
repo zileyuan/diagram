@@ -39,6 +39,7 @@ func newInstance() *macaron.Macaron {
 	m.Any("/cardtype", app.DoCardType)
 	m.Any("/storecode", app.DoStoreCode)
 	m.Any("/custtype", app.DoCustType)
+	m.Any("/updcust", app.DoUpdCust)
 	return m
 }
 

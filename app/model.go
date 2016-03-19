@@ -44,9 +44,12 @@ type Custtype struct {
 type Customer struct {
 	Uid        string `json:"uid"`
 	Store      string `json:"store"`
+	Storeid    string `json:"storeid"`
 	Crname     string `json:"crname"`
+	Crqcode    string `json:"crqcode"`
 	Crtitle    string `json:"crtitle"`
 	Kehlx      string `json:"kehlx"`
+	Kehlxid    string `json:"kehlxid"`
 	Crsex      string `json:"crsex"`
 	Mobile     string `json:"mobile"`
 	Crbirthday string `json:"crbirthday"`

@@ -1,25 +1,61 @@
+var kehlx_data,store_data;
+
 $(document).ready(function() {
 	var data = {}
 	ajax("POST", "/custtype", data, function (result) {
 		var list = $$('custtype').getPopup().getList();
 		list.clearAll();
 		list.parse(result.data);
+		
+		list = $$('Kehlx').getPopup().getList();
+		list.clearAll();
+		list.parse(result.data);
+		
+		kehlx_data = result.data
 	})
 	ajax("POST", "/storecode", data, function (result) {
 		var list = $$('storecode').getPopup().getList();
 		list.clearAll();
 		list.parse(result.data);
+		
+		store_data = result.data
+		
+//		list = $$('Store').getPopup().getList();
+//		list.clearAll();
+//		list.parse(result.data);
 	})
 })
 
 function do_cust() {
+    var data = {
+        CustName: $$('custname').getValue(),
+		Mobile: $$('mobile').getValue(),
+        CustType: $$('custtype').getValue(),
+        StoreCode: $$('storecode').getValue(),
+    };
+    ajax("POST", "/customer", data, function (result) {
+		if (result.success) {
+        var data = result.data;
+        $$('dtable').clearAll();
+        $$('dtable').parse(data);
+		} else {
+			webix.message(result.data);
+		}
+    })
+}
+
+function do_addcust() {
     //var data = {
     //    CustName: $$('custname').getValue(),
 		//Mobile: $$('mobile').getValue(),
     //    CustType: $$('custtype').getValue(),
     //    StoreCode: $$('storecode').getValue(),
     //};
-
+    $$('uuid').setValue("")
+	$$('Uid').setValue("")
+	$$('Crname').setValue("")
+	$$('Crqcode').setValue("")
+	//$$('Kehlx').setValue("")
     $$('win2').show()
 }
 
@@ -59,17 +95,17 @@ webix.ui({
         },
 		{
             view: "button",
-            id:"btn",
+            id:"btnfind",
 			width:80,
 			label: '查询',
 			click: do_cust
         },
 		{
             view: "button",
-            id:"btn",
+            id:"btnadd",
 			width:80,
 			label: '新增客户',
-			click: do_cust
+			click: do_addcust
         },
     ]
 });
@@ -136,8 +172,9 @@ grida = webix.ui({
 		{ id:"crsex",header:"性别",width:55},
         { id:"mobile", header:"手机号",width:120},
 		{ id:"crbirthday", header:"生日",width:105},
-		{ id:"",template:"<input class='detail' type='button' value='详情'><input class='other' type='button' value='积分兑换'>",
-            css:"padding_less",width:100},
+//		{ id:"",template:"<input class='detail' type='button' value='详情'><input class='other' type='button' value='积分兑换'>",
+//            css:"padding_less",width:100},
+        { id:"",template:"<input class='detail' type='button' value='详情'>"},
     ],
     select:"cell",
     autowidth:true,
@@ -152,7 +189,12 @@ grida = webix.ui({
 
 grida.on_click.detail=function(e, id, trg){
     var o = this.getItem(id.row)
-
+	$$('uuid').setValue(o.id)
+	$$('Uid').setValue(o.uid)
+	$$('Crname').setValue(o.crname)
+	$$('Crqcode').setValue(o.crqcode)
+	$$('Kehlx').setValue(o.kehlxid)
+	//$$('Kehlx').disable();
     $$('win2').show()
 
     return false;
@@ -162,32 +204,56 @@ var form = {
     view:"form",
     borderless:true,
     elements: [
+		{ view:"text", label:'uuid', id:"uuid", hidden:true },
         { view:"text", label:'Uid', id:"Uid", hidden:true },
         {
             rows:[
                 {
                     cols:[
-                        { view:"combo", label:'Store', id:"Store" },
+                        { view:"combo", label:'Kehlx', id:"Kehlx" ,options: []},
                         { view:"text", label:'Crname', id:"Crname" },
                     ]}
             ]
         },
-
+        { view:"text", label:'Crqcode', id:"Crqcode" },
         { view:"text", label:'Crtitle', id:"Crtitle" },
-        { view:"combo", label:'Kehlx', id:"Kehlx" },
         { view:"text", label:'Crsex', name:"Crsex" },
         { view:"text", label:'Mobile', name:"Mobile" },
         { view:"datepicker", label:'Crbirthday', name:"Crbirthday" },
         { view:"button", value: "Submit", click:function(){
 
+			var b = this;
+			
+            var data = {
+				uid: $$('Uid').getValue(),
+				crname: $$('Crname').getValue(),
+				kehlxid: $$('Kehlx').getValue(),
+				crqcode: $$('Crqcode').getValue(),
+				storeid: getUrlParam("store")
+			}
+			for (v in store_data) {
+				if (store_data[v].id == data.storeid) {
+					data.store = store_data[v].value;
+					break;
+				}
+			}
+			for (v in kehlx_data) {
+				if (kehlx_data[v].id == data.kehlxid) {
+					data.kehlx = kehlx_data[v].value;
+					break;
+				}
+			}
 
-            var data = {}
-
-            ajax("POST", "/customer", data, function (result) {
+            ajax("POST", "/updcust", data, function (result) {
                 if (result.success) {
-                    var data = result.data;
-                    $$('dtable').clearAll();
-                    $$('dtable').parse(data);
+					//var o = grida.getItem($('uuid').getValue())
+					if ($$('uuid').getValue()=="") {
+						data.uid = result.data;
+					  	grida.add(data, 0)	
+					} else {
+					  grida.updateItem($$('uuid').getValue(), data);	
+					}
+					b.getTopParentView().hide();
                 } else {
                     webix.message(result.data);
                 }
