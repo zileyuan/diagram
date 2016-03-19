@@ -19,6 +19,7 @@ var (
 	AppCfg *goconfig.ConfigFile
 	AppLog *log.Logger
 	AppDB  *core.DB
+	insertChan chan bool
 
 	AppName string
 	RunMode string
@@ -34,6 +35,8 @@ var (
 )
 
 func init() {
+
+	insertChan = make(chan bool)
 
 	//init log
 	AppLog = log.New(os.Stderr, "", log.Ldefault())
