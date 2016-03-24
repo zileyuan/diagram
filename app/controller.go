@@ -8,7 +8,6 @@ import (
 
 	"github.com/axgle/mahonia"
 	"github.com/mozillazg/go-pinyin"
-	"gopkg.in/macaron.v1"
 )
 
 const (
@@ -21,24 +20,33 @@ type ContextResult struct {
 	Data    interface{} `json:"data"`
 }
 
-func DoIndex(ctx *macaron.Context) {
+func NeedSignedIn(ctx *Context) {
+	if !ctx.IsSigned {
+		ctx.Redirect("/")
+	} else {
+		ctx.Next()
+	}
+}
+
+func DoIndex(ctx *Context) {
 	ctx.HTML(200, "login")
 }
 
-func DoPage1(ctx *macaron.Context) {
+func DoPage1(ctx *Context) {
 	ctx.HTML(200, "show1")
 }
 
-func DoPage2(ctx *macaron.Context) {
+func DoPage2(ctx *Context) {
 	ctx.HTML(200, "show2")
 }
 
-func OnLogin(ctx *macaron.Context) {
+func OnLogin(ctx *Context) {
 	username := ctx.Query("username")
 	userpass := ctx.Query("userpass")
 	fmt.Println(username, userpass)
 	if username == "root" && userpass == "pass" {
 		fmt.Println("login ok!")
+		ctx.Session.Set(SessionKey, username)
 		ctx.JSON(200, &ContextResult{
 			Success: true,
 			Data: "/page2",
@@ -50,7 +58,7 @@ func OnLogin(ctx *macaron.Context) {
 	})
 }
 
-func OnOverview(ctx *macaron.Context) {
+func OnOverview(ctx *Context) {
 	startDateStr := ctx.Query("StartDate")
 	finishDateStr := ctx.Query("FinishDate")
 	fmt.Println(startDateStr, finishDateStr)
@@ -91,7 +99,7 @@ func OnOverview(ctx *macaron.Context) {
 	}
 }
 
-func OnCustType(ctx *macaron.Context) {
+func OnCustType(ctx *Context) {
 	sql := `select yudlx_id as id,yudlx_mingc as value from yudlx where itype=1`
 	fmt.Println(sql)
 	rows, err := AppDB.Query(sql)
@@ -112,7 +120,7 @@ func OnCustType(ctx *macaron.Context) {
 	})
 }
 
-func OnStoreCode(ctx *macaron.Context) {
+func OnStoreCode(ctx *Context) {
 	sql := `select csCode as id,csName as value from cmstore order by csCode`
 	fmt.Println(sql)
 	rows, err := AppDB.Query(sql)
@@ -135,7 +143,7 @@ func OnStoreCode(ctx *macaron.Context) {
 	})
 }
 
-func OnCardType(ctx *macaron.Context) {
+func OnCardType(ctx *Context) {
 	sql := `select uid as id,name as value from sscate where type='CardType'`
 	fmt.Println(sql)
 	rows, err := AppDB.Query(sql)
@@ -157,7 +165,7 @@ func OnCardType(ctx *macaron.Context) {
 	})
 }
 
-func OnCustomer(ctx *macaron.Context) {
+func OnCustomer(ctx *Context) {
 	StoreCode := ctx.Query("StoreCode")
 	CustType := ctx.Query("CustType")
 	CustName := ctx.Query("CustName")
@@ -223,7 +231,7 @@ func OnCustomer(ctx *macaron.Context) {
 	}
 }
 
-func OnUpdCust(ctx *macaron.Context) {
+func OnUpdCust(ctx *Context) {
 	Uid := ctx.Query("uid")
 	Crname := ctx.Query("crname")
 	Kehlxid := ctx.Query("kehlxid")
@@ -302,7 +310,7 @@ func OnUpdCust(ctx *macaron.Context) {
 	}
 }
 
-func OnCardTotal(ctx *macaron.Context) {
+func OnCardTotal(ctx *Context) {
 	startDateStr := ctx.Query("StartDate")
 	finishDateStr := ctx.Query("FinishDate")
 	KH := ctx.Query("KH")

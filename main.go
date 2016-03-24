@@ -25,6 +25,7 @@ func newMacaron() *macaron.Macaron {
 	}))
 	m.Use(cache.Cacher())
 	m.Use(session.Sessioner())
+	m.Use(app.Contexter())
 	return m
 }
 
@@ -33,8 +34,8 @@ func newInstance() *macaron.Macaron {
 	//路由跳转
 	m.Get("/", app.DoIndex)
 	m.Get("/index", app.DoIndex)
-	m.Get("/page1", app.DoPage1)
-	m.Get("/page2", app.DoPage2)
+	m.Get("/page1", app.NeedSignedIn, app.DoPage1)
+	m.Get("/page2", app.NeedSignedIn, app.DoPage2)
 	//服务路由
 	m.Any("/login", app.OnLogin)
 	m.Any("/overview", app.OnOverview)

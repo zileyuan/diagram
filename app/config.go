@@ -13,6 +13,7 @@ import (
 
 const (
 	CfgPath = "./app.conf"
+	SessionKey = "this_is_session_username"
 )
 
 var (
