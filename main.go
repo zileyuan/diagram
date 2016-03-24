@@ -31,8 +31,10 @@ func newMacaron() *macaron.Macaron {
 func newInstance() *macaron.Macaron {
 	m := newMacaron()
 	//路由跳转
-	m.Get("/page1", app.DoIndex)
-	m.Get("/page2", app.DoIndex2)
+	m.Get("/", app.DoIndex)
+	m.Get("/index", app.DoIndex)
+	m.Get("/page1", app.DoPage1)
+	m.Get("/page2", app.DoPage2)
 	m.Any("/overview", app.DoOverview)
 	m.Any("/cardtotal", app.DoCardTotal)
 	m.Any("/customer", app.DoCustomer)

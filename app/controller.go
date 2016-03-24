@@ -22,10 +22,14 @@ type ContextResult struct {
 }
 
 func DoIndex(ctx *macaron.Context) {
+	ctx.HTML(200, "login")
+}
+
+func DoPage1(ctx *macaron.Context) {
 	ctx.HTML(200, "show1")
 }
 
-func DoIndex2(ctx *macaron.Context) {
+func DoPage2(ctx *macaron.Context) {
 	ctx.HTML(200, "show2")
 }
 
@@ -218,39 +222,55 @@ func DoUpdCust(ctx *macaron.Context) {
 		}
 	}
 	if Uid == "" {
-		sql := `select cast(max(uid) as int) as uid from crcustomer`
-		rows, err := AppDB.Query(sql)
-		if err != nil {
-			fmt.Printf("Query %v", err)
-		}
-		defer rows.Close()
-		var ct Customer
-		for rows.Next() {
-			err = rows.ScanStructByName(&ct)
-			if err == nil {
-				val, err := strconv.Atoi(ct.Uid)
-				val++
-				newid := fmt.Sprintf("%010d", val)
-				sql := `insert into crcustomer (uid,crID,crType,crname,crqcode,crkehlx) values ('%s','%s',1,'%s','%s','%s')`
-				sql = fmt.Sprintf(sql, newid, Storeid, Crname, Crqcode, Kehlxid)
-				fmt.Println(sql)
-				_, err = AppDB.Exec(sql)
-				if err == nil {
-					sql := `insert into crperson (uid,crSex,crMarriage) values ('%s','不详','不详')`
-					sql = fmt.Sprintf(sql, newid)
-					fmt.Println(sql)
-					_, err = AppDB.Exec(sql)
-					if err != nil {
-						fmt.Printf("QueryErr %v", sql)
-					} else {
-						ctx.JSON(200, &ContextResult{Success: true, Data: newid})
+		globalInsertChan <- true
+		timeout := time.After(30 * time.Second)
+		forchan := make(chan bool)
+		for {
+			select {
+			case forchan <- true:
+				sql := `select cast(max(uid) as int) as uid from crcustomer`
+				rows, err := AppDB.Query(sql)
+				if err != nil {
+					fmt.Printf("Query %v", err)
+				}
+				defer rows.Close()
+				cr := ContextResult{Success: false}
+				var ct Customer
+				for rows.Next() {
+					err = rows.ScanStructByName(&ct)
+					if err == nil {
+						val, err := strconv.Atoi(ct.Uid)
+						val++
+						newid := fmt.Sprintf("%010d", val)
+						sql := `insert into crcustomer (uid,crID,crType,crname,crqcode,crkehlx) values ('%s','%s',1,'%s','%s','%s')`
+						sql = fmt.Sprintf(sql, newid, Storeid, Crname, Crqcode, Kehlxid)
+						fmt.Println(sql)
+						_, err = AppDB.Exec(sql)
+						if err == nil {
+							sql := `insert into crperson (uid,crSex,crMarriage) values ('%s','不详','不详')`
+							sql = fmt.Sprintf(sql, newid)
+							fmt.Println(sql)
+							_, err = AppDB.Exec(sql)
+							if err != nil {
+								fmt.Printf("QueryErr %v", sql)
+							} else {
+								cr.Success = true
+								cr.Data = newid
 
+							}
+						}
+					} else {
+						fmt.Printf("**********%v*********", err)
 					}
 				}
-			} else {
-				fmt.Printf("**********%v*********", err)
+				close(forchan)
+				<-globalInsertChan
+				ctx.JSON(200, &cr)
+			case <-timeout:
+				<-globalInsertChan
 			}
 		}
+
 	} else {
 		sql := `update crcustomer set crname='%s',crQCode='%s',crKehlx='%s' where uid='%s'`
 		sql = fmt.Sprintf(sql, Crname, Crqcode, Kehlxid, Uid)
