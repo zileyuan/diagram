@@ -53,14 +53,14 @@
 												<fieldset>
 													<label class="block clearfix">
 														<span class="block input-icon input-icon-right">
-															<input type="text" class="form-control" placeholder="用户名称" />
+															<input id="username" type="text" class="form-control" placeholder="用户名称" />
 															<i class="ace-icon fa fa-user"></i>
 														</span>
 													</label>
 
 													<label class="block clearfix">
 														<span class="block input-icon input-icon-right">
-															<input type="password" class="form-control" placeholder="用户密码" />
+															<input id="userpass" type="password" class="form-control" placeholder="用户密码" />
 															<i class="ace-icon fa fa-lock"></i>
 														</span>
 													</label>
@@ -75,7 +75,7 @@
 
 														<button type="button" class="width-35 pull-right btn btn-sm btn-primary">
 															<i class="ace-icon fa fa-key"></i>
-															<span class="bigger-110">登录</span>
+															<span class="bigger-110" onclick="login()">登录</span>
 														</button>
 													</div>
 
@@ -230,8 +230,32 @@
 		<script type="text/javascript">
 			window.jQuery || document.write("<script src='/libs/jquery/jquery.min.js'>"+"<"+"/script>");
 		</script>
-
 		<!-- <![endif]-->
+
+		<!--login process-->
+		<script type="text/javascript">
+			function login() {
+				userdata = {
+					username: $('#username').val(),
+					userpass: $('#userpass').val(),
+				}
+				var setting = {
+					url: '/login',
+					type: 'POST',
+					data: userdata,
+					dataType: 'json',
+				};
+				$.ajax(setting).done(function (data) {
+							if (data.success) {
+								$(location).attr('href', data.data);
+							} else {
+								$('#username').val("");
+								$('#userpass').val("");
+							}
+						})
+
+			}
+		</script>
 
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">

@@ -33,7 +33,24 @@ func DoPage2(ctx *macaron.Context) {
 	ctx.HTML(200, "show2")
 }
 
-func DoOverview(ctx *macaron.Context) {
+func OnLogin(ctx *macaron.Context) {
+	username := ctx.Query("username")
+	userpass := ctx.Query("userpass")
+	fmt.Println(username, userpass)
+	if username == "root" && userpass == "pass" {
+		fmt.Println("login ok!")
+		ctx.JSON(200, &ContextResult{
+			Success: true,
+			Data: "/page2",
+		})
+		return
+	}
+	ctx.JSON(200, &ContextResult{
+		Success: false,
+	})
+}
+
+func OnOverview(ctx *macaron.Context) {
 	startDateStr := ctx.Query("StartDate")
 	finishDateStr := ctx.Query("FinishDate")
 	fmt.Println(startDateStr, finishDateStr)
@@ -74,7 +91,7 @@ func DoOverview(ctx *macaron.Context) {
 	}
 }
 
-func DoCustType(ctx *macaron.Context) {
+func OnCustType(ctx *macaron.Context) {
 	sql := `select yudlx_id as id,yudlx_mingc as value from yudlx where itype=1`
 	fmt.Println(sql)
 	rows, err := AppDB.Query(sql)
@@ -95,7 +112,7 @@ func DoCustType(ctx *macaron.Context) {
 	})
 }
 
-func DoStoreCode(ctx *macaron.Context) {
+func OnStoreCode(ctx *macaron.Context) {
 	sql := `select csCode as id,csName as value from cmstore order by csCode`
 	fmt.Println(sql)
 	rows, err := AppDB.Query(sql)
@@ -118,7 +135,7 @@ func DoStoreCode(ctx *macaron.Context) {
 	})
 }
 
-func DoCardType(ctx *macaron.Context) {
+func OnCardType(ctx *macaron.Context) {
 	sql := `select uid as id,name as value from sscate where type='CardType'`
 	fmt.Println(sql)
 	rows, err := AppDB.Query(sql)
@@ -140,7 +157,7 @@ func DoCardType(ctx *macaron.Context) {
 	})
 }
 
-func DoCustomer(ctx *macaron.Context) {
+func OnCustomer(ctx *macaron.Context) {
 	StoreCode := ctx.Query("StoreCode")
 	CustType := ctx.Query("CustType")
 	CustName := ctx.Query("CustName")
@@ -206,7 +223,7 @@ func DoCustomer(ctx *macaron.Context) {
 	}
 }
 
-func DoUpdCust(ctx *macaron.Context) {
+func OnUpdCust(ctx *macaron.Context) {
 	Uid := ctx.Query("uid")
 	Crname := ctx.Query("crname")
 	Kehlxid := ctx.Query("kehlxid")
@@ -285,7 +302,7 @@ func DoUpdCust(ctx *macaron.Context) {
 	}
 }
 
-func DoCardTotal(ctx *macaron.Context) {
+func OnCardTotal(ctx *macaron.Context) {
 	startDateStr := ctx.Query("StartDate")
 	finishDateStr := ctx.Query("FinishDate")
 	KH := ctx.Query("KH")

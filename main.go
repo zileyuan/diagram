@@ -35,13 +35,15 @@ func newInstance() *macaron.Macaron {
 	m.Get("/index", app.DoIndex)
 	m.Get("/page1", app.DoPage1)
 	m.Get("/page2", app.DoPage2)
-	m.Any("/overview", app.DoOverview)
-	m.Any("/cardtotal", app.DoCardTotal)
-	m.Any("/customer", app.DoCustomer)
-	m.Any("/cardtype", app.DoCardType)
-	m.Any("/storecode", app.DoStoreCode)
-	m.Any("/custtype", app.DoCustType)
-	m.Any("/updcust", app.DoUpdCust)
+	//服务路由
+	m.Any("/login", app.OnLogin)
+	m.Any("/overview", app.OnOverview)
+	m.Any("/cardtotal", app.OnCardTotal)
+	m.Any("/customer", app.OnCustomer)
+	m.Any("/cardtype", app.OnCardType)
+	m.Any("/storecode", app.OnStoreCode)
+	m.Any("/custtype", app.OnCustType)
+	m.Any("/updcust", app.OnUpdCust)
 	return m
 }
 
