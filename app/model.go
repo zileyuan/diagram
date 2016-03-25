@@ -53,4 +53,9 @@ type Customer struct {
 	Crsex      string `json:"crsex"`
 	Mobile     string `json:"mobile"`
 	Crbirthday string `json:"crbirthday"`
+	Crmarriage string `json:"crmarriage"`
+	Crzip      string `json:"crzip"`
+	Cridentity string `json:"cridentity"`
+	Crhobby    string `json:"crhobby"`
+	Crmemo     string `json:"crmemo"`
 }

@@ -17,10 +17,9 @@ const (
 )
 
 var (
-	AppCfg           *goconfig.ConfigFile
-	AppLog           *log.Logger
-	AppDB            *core.DB
-	globalInsertChan chan bool
+	AppCfg *goconfig.ConfigFile
+	AppLog *log.Logger
+	AppDB  *core.DB
 
 	AppName string
 	RunMode string
@@ -36,8 +35,6 @@ var (
 )
 
 func init() {
-
-	globalInsertChan = make(chan bool)
 
 	//init log
 	AppLog = log.New(os.Stderr, "", log.Ldefault())

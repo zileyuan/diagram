@@ -49,7 +49,7 @@ func OnLogin(ctx *Context) {
 		ctx.Session.Set(SessionKey, username)
 		ctx.JSON(200, &ContextResult{
 			Success: true,
-			Data: "/page2",
+			Data: "/NetCust",
 		})
 		return
 	}
@@ -186,8 +186,13 @@ func OnCustomer(ctx *Context) {
 		sqltext4 = `and crMobile like '` + Mobile + `%'`
 	}
 	fmt.Printf("%v %v %v %v", StoreCode, CustType, CustName, Mobile)
-	sql := `SELECT crCustomer.uid,isnull(crID,'') as storeid,isnull(csName,'') as store,isnull(crname,'') as crname,isnull(crqcode,'') as crqcode,isnull(crtitle,'') as crtitle,
-	isnull(crKehlx,'') as kehlxid,isnull(yudlx_mingc,'') as kehlx,isnull(crsex,'') as crsex,isnull(crmobile,'') as mobile,isnull(crbirthday,'') as crbirthday 
+	sql := `SELECT crCustomer.uid,isnull(crID,'') as storeid,isnull(csName,'') as store,
+	isnull(crname,'') as crname,isnull(crqcode,'') as crqcode,isnull(crtitle,'') as crtitle,
+	isnull(crKehlx,'') as kehlxid,isnull(yudlx_mingc,'') as kehlx,isnull(crsex,'') as crsex,
+	isnull(crmobile,'') as mobile,isnull(crbirthday,'') as crbirthday,
+	isnull(crZip,'') as crzip,isnull(crIdentity,'') as cridentity,
+	isnull(crMarriage,'') as crmarriage,isnull(crMemo,'') as crmemo,
+	isnull(crHobby,'') as crhobby 
 	FROM crCustomer INNER JOIN crPerson ON crCustomer.UID = crPerson.UID 
 	LEFT OUTER JOIN YUDLX ON crCustomer.crKehlx = YUDLX.YUDLX_ID 
 	LEFT OUTER JOIN cmStore ON crCustomer.crID = cmStore.csCode %s %s %s %s`
@@ -212,6 +217,11 @@ func OnCustomer(ctx *Context) {
 			ct.Crsex = GBKToUtf8(ct.Crsex)
 			ct.Mobile = GBKToUtf8(ct.Mobile)
 			ct.Crbirthday = GBKToUtf8(ct.Crbirthday)
+			ct.Crmarriage = GBKToUtf8(ct.Crmarriage)
+			ct.Crzip = GBKToUtf8(ct.Crzip)
+			ct.Cridentity = GBKToUtf8(ct.Cridentity)
+			ct.Crhobby = GBKToUtf8(ct.Crhobby)
+			ct.Crmemo = GBKToUtf8(ct.Crmemo)
 			cts = append(cts, ct)
 		} else {
 			fmt.Printf("**********%v*********", err)
@@ -231,82 +241,120 @@ func OnCustomer(ctx *Context) {
 	}
 }
 
+func Substr(str string, start, length int) string {
+	rs := []rune(str)
+	rl := len(rs)
+	end := 0
+	if start < 0 {
+		start = rl - 1 + start
+	}
+	end = start + length
+	if start > end {
+		start, end = end, start
+	}
+	if start < 0 {
+		start = 0
+	}
+	if start > rl {
+		start = rl
+	}
+	if end < 0 {
+		end = 0
+	}
+	if end > rl {
+		end = rl
+	}
+	return string(rs[start:end])
+}
+
 func OnUpdCust(ctx *Context) {
 	Uid := ctx.Query("uid")
 	Crname := ctx.Query("crname")
 	Kehlxid := ctx.Query("kehlxid")
 	Crqcode := ctx.Query("crqcode")
+	Crtitle := ctx.Query("crtitle")
 	Storeid := ctx.Query("storeid")
+	Crsex := ctx.Query("crsex")
+	Mobile := ctx.Query("mobile")
+	Crbirthday := ctx.Query("crbirthday")
+	Crbirthday = Substr(Crbirthday, 0, 10)
+	Crmarriage := ctx.Query("crmarriage")
+	Crzip := ctx.Query("crzip")
+	Cridentity := ctx.Query("cridentity")
+	Crhobby := ctx.Query("crhobby")
+	Crmemo := ctx.Query("crmemo")
+	//fmt.Printf("birthday %v", Crbirthday)
+	//myDate, _ := time.Parse("2006-01-02", Crbirthday)
+	//Crbirthday = myDate.Format("2006-01-02")
+	//myDate := String2Time(TimeLayout, Crbirthday)
+	//Crbirthday = fmt.Sprintf("%04d-%02d-%02d", myDate.Year(), myDate.Month(), myDate.Day())
 	if Crqcode == "" {
 		py := pinyin.NewArgs()
 		strs := pinyin.Pinyin(Crname, py)
 		//strs := py.Convert(Crname)
-		fmt.Println(strs)
+		//fmt.Println(strs)
 		for _, v := range strs {
 			Crqcode += string(v[0][0])
 		}
+		Crqcode = strings.ToUpper(Crqcode)
 	}
 	if Uid == "" {
-		globalInsertChan <- true
-		timeout := time.After(30 * time.Second)
-		forchan := make(chan bool)
-		for {
-			select {
-			case forchan <- true:
-				sql := `select cast(max(uid) as int) as uid from crcustomer`
-				rows, err := AppDB.Query(sql)
-				if err != nil {
-					fmt.Printf("Query %v", err)
-				}
-				defer rows.Close()
-				cr := ContextResult{Success: false}
-				var ct Customer
-				for rows.Next() {
-					err = rows.ScanStructByName(&ct)
-					if err == nil {
-						val, err := strconv.Atoi(ct.Uid)
-						val++
-						newid := fmt.Sprintf("%010d", val)
-						sql := `insert into crcustomer (uid,crID,crType,crname,crqcode,crkehlx) values ('%s','%s',1,'%s','%s','%s')`
-						sql = fmt.Sprintf(sql, newid, Storeid, Crname, Crqcode, Kehlxid)
-						fmt.Println(sql)
-						_, err = AppDB.Exec(sql)
-						if err == nil {
-							sql := `insert into crperson (uid,crSex,crMarriage) values ('%s','不详','不详')`
-							sql = fmt.Sprintf(sql, newid)
-							fmt.Println(sql)
-							_, err = AppDB.Exec(sql)
-							if err != nil {
-								fmt.Printf("QueryErr %v", sql)
-							} else {
-								cr.Success = true
-								cr.Data = newid
-
-							}
-						}
+		sql := `select cast(max(uid) as int) as uid from crcustomer`
+		rows, err := AppDB.Query(sql)
+		if err != nil {
+			fmt.Printf("Query %v", err)
+		}
+		defer rows.Close()
+		var ct Customer
+		for rows.Next() {
+			err = rows.ScanStructByName(&ct)
+			if err == nil {
+				val, err := strconv.Atoi(ct.Uid)
+				val++
+				newid := fmt.Sprintf("%012d", val)
+				sql := `insert into crcustomer (uid,crID,crType,crname,crqcode,crkehlx,crMobile,crZip,crMemo) values ('%s','%s',1,'%s','%s','%s','%s','%s','%s')`
+				sql = fmt.Sprintf(sql, newid, Storeid, Crname, Crqcode, Kehlxid, Mobile, Crzip, Crmemo)
+				fmt.Println(sql)
+				_, err = AppDB.Exec(sql)
+				if err == nil {
+					sql := `insert into crperson (uid,crTitle,crSex,crBirthday,crMarriage,crIdentity,crHobby) values ('%s','%s','%s','%s','%s','%s','%s')`
+					sql = fmt.Sprintf(sql, newid, Crtitle, Crsex, Crbirthday, Crmarriage, Cridentity, Crhobby)
+					fmt.Println(sql)
+					_, err = AppDB.Exec(sql)
+					if err != nil {
+						fmt.Printf("QueryErr %v", sql)
 					} else {
-						fmt.Printf("**********%v*********", err)
+						ctx.JSON(200, &ContextResult{Success: true, Data: newid + "," + Crqcode + "," + Crbirthday})
+
 					}
 				}
-				close(forchan)
-				<-globalInsertChan
-				ctx.JSON(200, &cr)
-			case <-timeout:
-				<-globalInsertChan
+			} else {
+				fmt.Printf("**********%v*********", err)
 			}
 		}
-
 	} else {
-		sql := `update crcustomer set crname='%s',crQCode='%s',crKehlx='%s' where uid='%s'`
-		sql = fmt.Sprintf(sql, Crname, Crqcode, Kehlxid, Uid)
+		sql := `update crcustomer set crname='%s',crQCode='%s',crKehlx='%s',crMobile='%s',crZip='%s',crMemo='%s' where uid='%s'`
+		sql = fmt.Sprintf(sql, Crname, Crqcode, Kehlxid, Mobile, Crzip, Crmemo, Uid)
 		fmt.Println(sql)
 		_, err := AppDB.Exec(sql)
-		if err != nil {
-			fmt.Printf("QueryErr %v", sql)
-		} else {
-			ctx.JSON(200, &ContextResult{Success: true, Data: ""})
+		if err == nil {
+			sql := `update crperson set crTitle='%s',crSex='%s',crBirthday='%s',crMarriage='%s',crIdentity='%s',crHobby='%s' where uid='%s'`
+			sql = fmt.Sprintf(sql, Crtitle, Crsex, Crbirthday, Crmarriage, Cridentity, Crhobby, Uid)
+			fmt.Println(sql)
+			_, err = AppDB.Exec(sql)
+			if err != nil {
+				fmt.Printf("QueryErr %v", sql)
+			} else {
+				ctx.JSON(200, &ContextResult{Success: true, Data: Crbirthday})
 
+			}
 		}
+		//		if err != nil {
+		//			fmt.Printf("QueryErr %v", sql)
+		//		} else {
+		//			ctx.JSON(200, &ContextResult{Success: true, Data: ""})
+
+		//		}
 	}
 }
 

@@ -35,7 +35,7 @@ func newInstance() *macaron.Macaron {
 	m.Get("/", app.DoIndex)
 	m.Get("/index", app.DoIndex)
 	m.Get("/page1", app.NeedSignedIn, app.DoPage1)
-	m.Get("/page2", app.NeedSignedIn, app.DoPage2)
+	m.Get("/NetCust", app.NeedSignedIn, app.DoPage2)
 	//服务路由
 	m.Any("/login", app.OnLogin)
 	m.Any("/overview", app.OnOverview)
